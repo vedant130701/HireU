@@ -81,7 +81,7 @@ async def main():
     17. Have you completed any vocational rehabilitation programs? 
     18. Are you a resident of Massachusetts? 
     19. Are you seeking full-time employment (30 hours or more per week)?
-    
+   
     Please ask the main questions as is and detail in () is not part of the question. Please use the questions in the same format. Only use the details
     in () to ask follow up questions. DO NOT MENTION EMPLOYER ANSWER IN ANY FORM IN YOUR QUESTIONS.
      
