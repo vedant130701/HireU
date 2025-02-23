@@ -5,6 +5,7 @@ from routes.employee_registration_questions import employer_registration_questio
 from routes.employee_registration_answers import employer_registration_answers_router
 from routes.employee_role_registration_questions import employer_role_registration_questions_router
 from routes.employee_role_registration_answers import employer_role_registration_answers_router
+from routes.question_answer_combined import candidate_answers_router
 app = FastAPI()
 
 app.include_router(employer_registration_router,prefix="/employer_registration",tags=["employer_registration"])
@@ -14,4 +15,6 @@ app.include_router(employer_registration_answers_router,prefix="/employer_regist
 app.include_router(employer_role_registration_questions_router,prefix="/employer_role_registration_questions",tags=["employer_role_registration_questions"])
 app.include_router(employer_role_registration_answers_router,prefix="/employer_role_registration_answers",tags=["employer_role_registration_answers"])
 
+app.include_router(employer_registration_router,prefix="/employer_registration",tags=["employer_registration"])
 
+app.include_router(candidate_answers_router, prefix="/candidate_answers", tags=["candidate_answers"])

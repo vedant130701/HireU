@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from dbcon.database import candidate_questions, employer_role_registration_answers
 
-employer_role_registration_questions_router = APIRouter()
+candidate_answers_router = APIRouter()
 
 
-@employer_role_registration_questions_router.post("/{employer_id}/{candidate_id}")
+@candidate_answers_router.post("/{employer_id}/{candidate_id}")
 async def get_formatted_questions_answers(candidate_id: str, employer_id: str):
     try:
         # Fetch employer's questions and generate formatted text
@@ -17,15 +17,25 @@ async def get_formatted_questions_answers(candidate_id: str, employer_id: str):
 
 
 async def generate_prompt(candidate_id, employer_id):
-    candidate_questions_final = await candidate_questions.find_one({"candidate_id": candidate_id})
+    candidate_questions_final = await candidate_questions.find_one()
     if not candidate_questions_final:
         raise HTTPException(status_code=404, detail="Candidate ID not found")
 
     # Fetch employer's answers
     employer_answers = await employer_role_registration_answers.find_one({"employer_id": employer_id}) or {}
 
-    # Organize answers by question_id
-    answers_dict = {str(answer["question_id"]): answer["answer_text"] for answer in employer_answers.get("answers", [])}
+    # Organize answers by question_id, ensuring answer_text is treated as a list
+    # Ensure employer_answers["answers"] is a list
+    answers_list = employer_answers.get("answers", [])
+    if not isinstance(answers_list, list):
+        raise HTTPException(status_code=500, detail="Invalid format: 'answers' should be a list of dictionaries.")
+
+    # Organize answers by question_id, ensuring answer_text is treated as a list
+    answers_dict = {
+        str(answer.get("question_id", "")): answer["answer_text"]
+        if isinstance(answer["answer_text"], list) else [answer["answer_text"]]
+        for answer in answers_list if isinstance(answer, dict)  # Ensure each item is a dictionary
+    }
 
     # Define indices where answers should be appended
     indices_with_answers = {1, 2, 3, 5, 6, 7, 8, 9}
@@ -37,18 +47,20 @@ async def generate_prompt(candidate_id, employer_id):
         "Candidate Questions:\n\n"
     )
 
-    for idx, question in enumerate(candidate_questions_final.get("questions", [])):
-        question_id = str(question["_id"])
+    for idx, question in enumerate(candidate_questions_final.get("questions", []), start=1):
+        question_id = str(question.get("_id", ""))
         question_text = f"{idx}. {question['question_text']}\n"
 
         # Append answer only if index is in the predefined set
         if idx in indices_with_answers:
-            answer_text = answers_dict.get(question_id, "(No answer provided)")
-            formatted_text += f"{question_text}{answer_text}\n\n"
+            answer_text = answers_dict.get(question_id, [])
+
+            # Ensure answer_text is always a list and join properly
+            formatted_answer = ", ".join(answer_text) if isinstance(answer_text, list) else str(answer_text)
+            formatted_text += f"{question_text}{formatted_answer}\n\n"
         else:
             formatted_text += f"{question_text}\n"
 
-    # Append follow-up instructions
     follow_up_instructions = (
         "Please ask the main questions as is and detail in () is not part of the question. Please use the questions in the same format. Only use the details\n"
         "in () to ask follow-up questions. DO NOT MENTION EMPLOYER ANSWER IN ANY FORM IN YOUR QUESTIONS.\n\n"
@@ -60,3 +72,6 @@ async def generate_prompt(candidate_id, employer_id):
     formatted_text += follow_up_instructions
 
     return formatted_text
+
+
+
