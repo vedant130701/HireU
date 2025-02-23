@@ -15,3 +15,12 @@ async def employee_registration_questions(employer_registration_questions_body: 
     except DuplicateKeyError:
         raise HTTPException(status_code=400, detail="Questions already exists against Employer")
     return {"res": "Questions added successfully"}
+
+
+@employer_registration_questions_router.get("/{employer_id}")
+async def employee_registration_questions_get(employer_id: str):
+    employer_questions = await employer_registration_questions.find_one({"employer_id": employer_id})
+    if not employer_questions:
+        raise HTTPException(status_code=404, detail="Employer ID not found")
+
+    return {"res": employer_questions.get("questions", [])}

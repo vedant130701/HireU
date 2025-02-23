@@ -13,3 +13,13 @@ class EmployerRegistrationQuestions(BaseModel):
 class EmployerRegistrationAnswers(BaseModel):
     employer_id: str
     answers: List[str]
+
+class EmployerRoleRegistrationQuestions(BaseModel):
+    employer_id: str
+    questions: List[str]
+    role_id: str
+
+class EmployerRoleRegistrationAnswers(BaseModel):
+    employer_id: str
+    answers: List[str]
+    role_id: str

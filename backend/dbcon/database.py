@@ -6,3 +6,5 @@ db = client.HireU
 employer_registration_collection = db.Employer_info
 employer_registration_questions = db.employer_registration_questions
 employer_registration_answers = db.employer_registration_answers
+employer_role_registration_questions = db.employer_role_registration_questions
+employer_role_registration_answers = db.employer_role_registration_answers
