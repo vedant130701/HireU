@@ -1,11 +1,14 @@
+from typing import List
+
 from fastapi import APIRouter, HTTPException
 from dbcon.database import candidate_questions, employer_role_registration_answers
+from model.models import QuestionAnswer
 from LLM_Server.llm_server import contact_llm
 
 candidate_answers_router = APIRouter()
 
 
-@candidate_answers_router.post("/{employer_id}/{candidate_id}")
+@candidate_answers_router.post("/initiate_conversation/{employer_id}/{candidate_id}")
 async def initiate_conversation(candidate_id: str, employer_id: str):
     try:
         formatted_text = await generate_prompt(candidate_id, employer_id)
@@ -21,7 +24,31 @@ async def initiate_conversation(candidate_id: str, employer_id: str):
         ]
         response = await contact_llm(prompt_for_llm)
         response[-1]["index"] = 0
-        return response
+        return response[2:]
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@candidate_answers_router.post("/continue_conversation/{employer_id}/{candidate_id}")
+async def continue_conversation(candidate_id: str, employer_id: str, body: List[QuestionAnswer]):
+    try:
+        prevIndex = body[-2]["index"]
+        formatted_text = await generate_prompt(candidate_id, employer_id)
+        prompt_for_llm = [
+            {
+                "role": "system",
+                "content": formatted_text
+            },
+            {
+                "role": "user",
+                "content": "Hello"
+            }
+        ]
+        modified_req = prompt_for_llm + body
+        response = await contact_llm(modified_req)
+        response[-1]["index"] = max(prevIndex, response[-1]["index"])
+        return response[2:]
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
