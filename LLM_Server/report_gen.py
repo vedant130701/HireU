@@ -2,6 +2,7 @@ from ollama import chat
 from ollama import ChatResponse
 import json
 import asyncio
+import os
 from ollama import AsyncClient
 import pandas as pd
 
@@ -20,7 +21,9 @@ Q:Are there any special requirements for this role (e.g., certifications, securi
 
 
 def get_grants_info():
-    grants = pd.read_excel('candidate_chatbot_questions.xlsx', engine='openpyxl')
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    grants = pd.read_excel(os.path.join(current_dir, 'candidate_chatbot_questions.xlsx'), engine='openpyxl')
     return grants
 
 def process_conversation(json_data):
@@ -36,7 +39,7 @@ def process_conversation(json_data):
         elif message["role"] == "user":
             final_result += "A: " + content + "\n"
 
-    print(final_result)
+    return final_result
 
 
 async def contact_llama(user_messages, model_version="llama3.1:8b"):
@@ -74,6 +77,10 @@ async def make_report(employer_questions, json_user_conversation):
     only_user_msg = [userMsg]
     result = await contact_llama(only_user_msg)
     result_fields.append({"Additional Remarks": result})
+    #test
+    # with open('response_message3.json', 'w') as f:
+    #     json.dump(result_fields, f, indent=4)
+    #     print("File created")
     return result_fields
     
 
