@@ -1,17 +1,21 @@
-from typing import List
+from typing import List, Any
 
 from fastapi import APIRouter, HTTPException
 from dbcon.database import candidate_questions, employer_role_registration_answers, candidate_answers
-from model.models import QuestionAnswer, CandidateAnswers
-from LLM_Server.llm_server import contact_llm
+from model.models import CandidateAnswers
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../LLM_Server')))
+from ollama_llm_server import contact_llm
+
 
 candidate_answers_router = APIRouter()
 
 
-@candidate_answers_router.post("/initiate_conversation/{employer_id}/{candidate_id}")
-async def initiate_conversation(candidate_id: str, employer_id: str):
+@candidate_answers_router.post("/initiate_conversation/{employer_id}/{role_id}")
+async def initiate_conversation(role_id:str, employer_id: str):
     try:
-        formatted_text = await generate_prompt(candidate_id, employer_id)
+        formatted_text = await generate_prompt(role_id, employer_id)
         prompt_for_llm = [
             {
                 "role": "system",
@@ -24,49 +28,49 @@ async def initiate_conversation(candidate_id: str, employer_id: str):
         ]
         response = await contact_llm(prompt_for_llm)
         response[-1]["index"] = 0
-        return response[2:]
+        return response
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@candidate_answers_router.post("/continue_conversation/{employer_id}/{candidate_id}")
-async def continue_conversation(candidate_id: str, employer_id: str, body: List[QuestionAnswer]):
+@candidate_answers_router.post("/continue_conversation/{employer_id}/{role_id}")
+async def continue_conversation(employer_id: str, role_id:str, body: List[Any]):
     try:
         prevIndex = body[-2]["index"]
-        formatted_text = await generate_prompt(candidate_id, employer_id)
-        prompt_for_llm = [
-            {
-                "role": "system",
-                "content": formatted_text
-            },
-            {
-                "role": "user",
-                "content": "Hello"
-            }
-        ]
-        modified_req = prompt_for_llm + body
-        response = await contact_llm(modified_req)
+        # formatted_text = await generate_prompt(role_id, employer_id)
+        # prompt_for_llm = [
+        #     {
+        #         "role": "system",
+        #         "content": formatted_text
+        #     },
+        #     {
+        #         "role": "user",
+        #         "content": "Hello"
+        #     }
+        # ]
+        # modified_req = prompt_for_llm + body
+        response = await contact_llm(body)
         response[-1]["index"] = max(prevIndex, response[-1]["index"])
-        return response[2:]
+        return response
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@candidate_answers_router.post("/end_conversation}")
+@candidate_answers_router.post("/end_conversation")
 async def end_conversation(candidate_answer: CandidateAnswers):
     candidate_answers.insert_one(candidate_answer.dict())
     return {"res": "Stored Responses Successfully"}
 
 
-async def generate_prompt(candidate_id, employer_id):
+async def generate_prompt(role_id, employer_id):
     candidate_questions_final = await candidate_questions.find_one()
     if not candidate_questions_final:
         raise HTTPException(status_code=404, detail="Candidate ID not found")
 
     # Fetch employer's answers
-    employer_answers = await employer_role_registration_answers.find_one({"employer_id": employer_id}) or {}
+    employer_answers = await employer_role_registration_answers.find_one({"employer_id": employer_id, "role_id": role_id}) or {}
 
     # Organize answers by question_id, ensuring answer_text is treated as a list
     # Ensure employer_answers["answers"] is a list
