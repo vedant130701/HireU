@@ -1,8 +1,8 @@
 from typing import List
 
 from fastapi import APIRouter, HTTPException
-from dbcon.database import candidate_questions, employer_role_registration_answers
-from model.models import QuestionAnswer
+from dbcon.database import candidate_questions, employer_role_registration_answers, candidate_answers
+from model.models import QuestionAnswer, CandidateAnswers
 from LLM_Server.llm_server import contact_llm
 
 candidate_answers_router = APIRouter()
@@ -52,6 +52,12 @@ async def continue_conversation(candidate_id: str, employer_id: str, body: List[
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@candidate_answers_router.post("/end_conversation}")
+async def end_conversation(candidate_answer: CandidateAnswers):
+    candidate_answers.insert_one(candidate_answer.dict())
+    return {"res": "Stored Responses Successfully"}
 
 
 async def generate_prompt(candidate_id, employer_id):

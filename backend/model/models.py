@@ -34,3 +34,9 @@ class QuestionAnswer(BaseModel):
     role: str
     content: str
     index: int
+
+class CandidateAnswers(BaseModel):
+    candidate_id: str
+    employer_id: str
+    role_id: str
+    answers: List[QuestionAnswer]
