@@ -52,7 +52,7 @@ const MessageBubble = styled(Box, {
   boxShadow: theme.shadows[1]
 }));
 
-const ChatInterface = ({ questionsList, handleQuestionnaireSubmit }) => {
+const ChatInterface = ({ questionsList, handleQuestionnaireSubmit, setAnswersList }) => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -74,7 +74,9 @@ const ChatInterface = ({ questionsList, handleQuestionnaireSubmit }) => {
 
   const handleSend = () => {
     if (!input.trim()) return;
-
+    if (input.includes('@') && input.includes('.')) {
+      localStorage.setItem('email', input);
+    }
     const userMessage = {
       text: input,
       isUser: true,
@@ -91,6 +93,7 @@ const ChatInterface = ({ questionsList, handleQuestionnaireSubmit }) => {
         setMessages((prev) => [...prev, { text: questionsList[nextIndex], isUser: false, id: Date.now() + 1 }]);
         setQuestionIndex(nextIndex);
       } else {
+        setAnswersList(messages.filter((message) => message.isUser).map((message) => message.text));
         setMessages((prev) => [...prev, { text: 'Thank you for answering all the questions!', isUser: false, id: Date.now() + 1 }]);
         setQuestionIndex(nextIndex);
       }
@@ -201,7 +204,7 @@ const ChatInterface = ({ questionsList, handleQuestionnaireSubmit }) => {
   );
 };
 
-const Chat = ({ questionsList, handleQuestionnaireSubmit }) => {
+const Chat = ({ questionsList, handleQuestionnaireSubmit, setAnswersList }) => {
   const [darkMode, setDarkMode] = useState(false);
 
   const theme = createTheme({
@@ -216,7 +219,7 @@ const Chat = ({ questionsList, handleQuestionnaireSubmit }) => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <ChatInterface questionsList={questionsList} handleQuestionnaireSubmit={handleQuestionnaireSubmit} />
+      <ChatInterface questionsList={questionsList} handleQuestionnaireSubmit={handleQuestionnaireSubmit} setAnswersList={setAnswersList} />
     </ThemeProvider>
   );
 };
