@@ -6,3 +6,4 @@ pandas
 openpyxl
 python-dotenv
 openai
+flask_cors

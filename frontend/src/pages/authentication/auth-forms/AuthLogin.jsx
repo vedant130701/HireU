@@ -16,7 +16,7 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-
+import { post } from '../../../services/services';
 // third party
 import * as Yup from 'yup';
 import { Formik } from 'formik';
@@ -34,6 +34,20 @@ import FirebaseSocial from './FirebaseSocial';
 export default function AuthLogin({ isDemo = false }) {
   const [checked, setChecked] = React.useState(false);
   const navigate = useNavigate();
+
+  const authenticate = async (employer_id, employer_password) => {
+    const payload = {
+      "employer_id": employer_id,
+      "employer_password": employer_password
+    }
+    const response = await post('/employer_registration/login', payload)
+    if(response.res === "Login successful") {
+      console.log("Login successful")
+      navigate('/home');
+    } else {
+      alert("Login failed")
+    }
+  }
 
   const [showPassword, setShowPassword] = React.useState(false);
   const handleClickShowPassword = () => {
@@ -58,9 +72,7 @@ export default function AuthLogin({ isDemo = false }) {
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
           console.log(values);
-          // redirect to dashboard directly
-          localStorage.setItem('isAuthenticated', true);
-          navigate('/home');
+          authenticate(values.email, values.password)
         }}
       >
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (

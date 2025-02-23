@@ -3,3 +3,4 @@ __pycache__/
 hireu-env/
 response_message.txt
 .env
+node_modules/

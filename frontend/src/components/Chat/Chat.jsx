@@ -72,7 +72,7 @@ const ChatInterface = ({ questionsList, handleQuestionnaireSubmit, setAnswersLis
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = (cb=()=>{}) => {
     if (!input.trim()) return;
     if (input.includes('@') && input.includes('.')) {
       localStorage.setItem('email', input);
@@ -84,6 +84,7 @@ const ChatInterface = ({ questionsList, handleQuestionnaireSubmit, setAnswersLis
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    setAnswersList((prev) => [...prev, input]);
     setInput('');
     setLoading(true);
 
@@ -93,12 +94,13 @@ const ChatInterface = ({ questionsList, handleQuestionnaireSubmit, setAnswersLis
         setMessages((prev) => [...prev, { text: questionsList[nextIndex], isUser: false, id: Date.now() + 1 }]);
         setQuestionIndex(nextIndex);
       } else {
-        setAnswersList(messages.filter((message) => message.isUser).map((message) => message.text));
+        // setAnswersList(messages.filter((message) => message.isUser).map((message) => message.text));
         setMessages((prev) => [...prev, { text: 'Thank you for answering all the questions!', isUser: false, id: Date.now() + 1 }]);
         setQuestionIndex(nextIndex);
       }
       setLoading(false);
     }, 1000);
+    cb();
   };
 
   const getButton = () => {
@@ -110,8 +112,7 @@ const ChatInterface = ({ questionsList, handleQuestionnaireSubmit, setAnswersLis
           variant="contained"
           color="primary"
           onClick={() => {
-            handleSend();
-            handleQuestionnaireSubmit();
+            handleSend(handleQuestionnaireSubmit);
           }}
         >
           Submit

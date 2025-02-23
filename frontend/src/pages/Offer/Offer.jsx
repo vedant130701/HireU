@@ -1,10 +1,12 @@
 import { Alert } from '@mui/material';
 import Chat from 'components/Chat/Chat';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import sendEmail from 'utils/emailSender';
+import { get, post } from '../../services/services';
+import { set } from 'lodash';
 
-const jobOfferQuestions = [
+const questionsList = [
   "What's the name of the candidate?",
   "What's the email id of the candidate?",
   'What salary range are you offering for this role?',
@@ -20,11 +22,33 @@ const jobOfferQuestions = [
   'Are there any special requirements for this role (e.g., certifications, security clearances, physical requirements)?'
 ];
 
+const employer_id = "trial123@gmail.com";
+const role_id = "Senior Software Developer";
+
 const Offer = () => {
   const navigate = useNavigate();
   const [alertMessage, setAlertMessage] = useState('');
   const [answersList, setAnswersList] = useState([]);
+  const [jobOfferQuestions, setJobOfferQuestions] = useState(questionsList);
+
+  useEffect(() => {
+    getQuestionsList();
+  }
+  , []);
+
+  const getQuestionsList = () => {
+    get(`/employer_role_registration_questions/${employer_id}/${role_id}`).then((response) => {
+      console.log(response);
+      setJobOfferQuestions(response.questions);
+      localStorage.setItem('role_id', response.role_id);
+    });
+  }
+
   const handleQuestionnaireSubmit = () => {
+      console.log("answerList", answersList);
+    // setTimeout(() => {
+      
+    // }, 5000);
     setAlertMessage(
       'Thank you for answering all the questions! We will review your responses and be in touch soon to let you know about next steps.'
     );

@@ -15,8 +15,10 @@ async def employee_role_registration_questions(employee_role_registration_questi
     return {"res": "Questions inserted successfully" }
 
 
-@employer_role_registration_questions_router.get("/{employer_id}")
-async def employee_role_registration_questions_get(employer_id: str):
-    employer_questions = await employer_role_registration_questions.find_one({"employer_id": employer_id})
+@employer_role_registration_questions_router.get("/{employer_id}/{role_id}")
+async def employee_role_registration_questions_get(employer_id: str, role_id: str):
+    employer_questions = await employer_role_registration_questions.find_one({"employer_id": employer_id, "role_id": role_id})
+    employer_questions["_id"] = str(employer_questions["_id"])
     if not employer_questions:
         raise HTTPException(status_code=404, detail="Employer ID not found")
+    return employer_questions

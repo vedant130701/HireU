@@ -7,6 +7,9 @@ class EmployerRegistration(BaseModel):
     employer_name: str
     employer_password: str
 
+class EmployerRegistrationLogin(BaseModel):
+    employer_id: str
+    employer_password: str
 
 class EmployerRegistrationQuestions(BaseModel):
     employer_id: str

@@ -1,15 +1,27 @@
 from fastapi import FastAPI
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
+
 
 from routes.employee_registration import employer_registration_router
 from routes.employee_registration_questions import employer_registration_questions_router
 from routes.employee_registration_answers import employer_registration_answers_router
+from flask_cors import CORS
 from routes.employee_role_registration_questions import employer_role_registration_questions_router
 from routes.employee_role_registration_answers import employer_role_registration_answers_router
 from routes.question_answer_combined import candidate_answers_router
 from routes.candidate_report_generation import candidate_report_generation
 
 app = FastAPI()
+# allow cors
+# cors = CORS(app)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 app.include_router(employer_registration_router, prefix="/employer_registration", tags=["employer_registration"])
 app.include_router(employer_registration_questions_router, prefix="/employer_registration_questions", tags=["employer_registration_questions"])
