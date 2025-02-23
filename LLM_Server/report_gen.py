@@ -23,14 +23,13 @@ def get_grants_info():
     grants = pd.read_excel('candidate_chatbot_questions.xlsx', engine='openpyxl')
     return grants
 
-def process_conversation(file_name):
+def process_conversation(json_data):
     # Load the JSON data from the file
-    with open(file_name) as f:
-        data = json.load(f)
+    
 
     final_result = ''
     # Process each turn in the conversation
-    for i, message in enumerate(data):
+    for i, message in enumerate(json_data):
         if message['role'] == 'assistant':
             final_result += f'Q: {message["content"].replace("\n", "").replace("\t", "")} '
         elif message['role'] == 'user':
@@ -44,49 +43,46 @@ async def contact_llama(user_messages, model_version="llama3.1:8b"):
     responseMessage = response['message']['content']
     return responseMessage
 
-async def make_report(employer_questions, user_conversation):
-    System_role = {
-        "role": "system",
-        "content":
-        '''Your job is to analyse the responses of the candidate and provide a report to thea small business/startup employer.
-        The following is the employer's questionnaire response: ''' + employer_questions + '''
-        The following is the conversation between the candidate and a recruiter: ''' + user_conversation + '''
-        Q stands for the question asked and A is the answer provided.
+async def make_report(employer_questions, json_user_conversation):
+    user_conversation = process_conversation(json_user_conversation)
 
-        Analyse both of the respones and generate a report for the employer to decide if the candidate will be
-        a good fit for the organization and the role. Also based on the candidate's responses, provide a list of
-        possible federal grants or benefits that the candidate and employer may be eligible for.
+    report_fields = [
+        "Compensation",
+        "Relocation",
+        "Benefits",
+        "Sponsorship",
+        "Work Timings",
+        "Leave Structure",
+        "Insurance Coverage",
+        "Special Requirements",
+    ]
 
-        The report should be in the following format:
-        Report Fields:
-        Compensation:
-        Relocation:
-        Benefits:
-        Sponsorship:
-        Work Timings:
-        Leave Structure:
-        Insurance Coverage:
-        Special Requirements:
-        Additional Remarks:
+    result_fields = []
+    
+    USER_PROMPT = "The following are the Employer requirements: " + employer_questions + "The following is the candidate responses: " + user_conversation 
 
-        Give your brief analysis for each field based on the candidate's responses and the employer's requirements.
-'''
-    }
-
-    messages = [System_role]
     getGrants = get_grants_info().to_string()
-    userMsg = {"role": "user", "content": "Here is information about the grants: " + getGrants + "Use it to generate a report."}
-    messages.append(userMsg)
-    result = await contact_llama(messages)
-    return result
+    # userMsg = {"role": "user", "content": "Here is information about the grants: " + getGrants + "Use it to generate a report in JSON format."}
+    for field in report_fields[:-1]:
+        userMsg = {"role": "user", "content": USER_PROMPT + " Based on the information give a feedback to the employer on the topic: '" + field + "' In 50 words."}
+        set_role_msg = [userMsg]
+        result = await contact_llama(set_role_msg)
+        result_fields.append({field: result})
+    
+    userMsg = {"role": "user", "content": USER_PROMPT + "The following is grant information: " + getGrants +  " Tell me about the grants that the candidate and employer may be eligible for."}
+    only_user_msg = [userMsg]
+    result = await contact_llama(only_user_msg)
+    result_fields.append({"Additional Remarks": result})
+    return result_fields
     
 
 async def main():
     # Call the function with the input file name
-    candidate_chat_hist = process_conversation('chatHistory.json')
-    ans = await make_report(Employer_questions, candidate_chat_hist)
-    with open('grant_response_message.txt', 'w') as f:
-        f.write(ans)
+    with open('chatHistory.json') as f:
+        data = json.load(f)
+    ans = await make_report(Employer_questions, data)
+    with open('response_message2.json', 'w') as f:
+        json.dump(ans, f, indent=4)
     
 
 
