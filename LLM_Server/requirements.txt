@@ -1,0 +1,3 @@
+ollama
+fuzzywuzzy
+python-Levenshtein
