@@ -13,7 +13,7 @@ import random
 
 candidate_report_generation = APIRouter()
 
-tasks = {}
+# tasks = {}
 
 
 def format_questions(candidate_questions_final, answers_list):
@@ -54,17 +54,20 @@ async def generate_report(body: ReportGen):
         if not isinstance(answers_list, list):
             raise HTTPException(status_code=500, detail="Invalid format: 'answers' should be a list of dictionaries.")
 
-        json_answer_list = json.dumps(answers_list)
-
         # Ensure `tasks` is globally defined before using it
-        if "tasks" not in globals():
-            tasks = {}
+        # if "tasks" not in globals():
+        tasks = {}
 
         # Create async task
-        task = asyncio.create_task(make_report(employerQA, json_answer_list))
-        tasks[f"report_generation_{id(task)}"] = task
+        # task = asyncio.create_task(make_report(employerQA, answers_list))
+        # tasks[f"report_generation_{id(task)}"] = task
+        # tasks[f"report_generation_1"] = 1
 
-        return {"res": f"Report generation started, task ID: {id(task)}", "id": id(task)}
+        final_response = await make_report(employerQA, answers_list)
+
+        # return {"res": f"Report generation started, task ID: {id(task)}", "id": id(task)}
+        # return {"res": f"Report generation started, task ID:", "json_answer_list": answers_list, "employerQA": employerQA}
+        return {"res": final_response}
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error: {str(e)}")
