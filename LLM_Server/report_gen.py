@@ -1,6 +1,9 @@
 from ollama import chat
 from ollama import ChatResponse
 import json
+import asyncio
+from ollama import AsyncClient
+import pandas as pd
 
 Employer_questions = '''
 Q:What salary range are you offering for this role? A:100-120k
@@ -15,6 +18,10 @@ Q:What kind of insurance coverage does the employer provide for this role? A:Yes
 Q:Do you offer commuter benefits or travel reimbursement for work? A:yes mbta unlimited pass provided
 Q:Are there any special requirements for this role (e.g., certifications, security clearances, physical requirements)? A:None'''
 
+
+def get_grants_info():
+    grants = pd.read_excel('candidate_chatbot_questions.xlsx', engine='openpyxl')
+    return grants
 
 def process_conversation(file_name):
     # Load the JSON data from the file
@@ -32,12 +39,12 @@ def process_conversation(file_name):
 
     return final_result
 
-def contact_llama(user_messages, model_version="llama3.1:8b"):
-    response: ChatResponse = chat(model_version, messages=user_messages, stream=False)
+async def contact_llama(user_messages, model_version="llama3.1:8b"):
+    response: ChatResponse =  await AsyncClient().chat(model_version, messages=user_messages, stream=False)
     responseMessage = response['message']['content']
     return responseMessage
 
-def make_report(employer_questions, user_conversation):
+async def make_report(employer_questions, user_conversation):
     System_role = {
         "role": "system",
         "content":
@@ -67,20 +74,21 @@ def make_report(employer_questions, user_conversation):
     }
 
     messages = [System_role]
-    userMsg = {"role": "user", "content": "Generate a report"}
+    getGrants = get_grants_info().to_string()
+    userMsg = {"role": "user", "content": "Here is information about the grants: " + getGrants + "Use it to generate a report."}
     messages.append(userMsg)
-    result = contact_llama(messages)
+    result = await contact_llama(messages)
     return result
     
 
-def main():
+async def main():
     # Call the function with the input file name
     candidate_chat_hist = process_conversation('chatHistory.json')
-    ans = make_report(Employer_questions, candidate_chat_hist)
-    with open('response_message.txt', 'w') as f:
+    ans = await make_report(Employer_questions, candidate_chat_hist)
+    with open('grant_response_message.txt', 'w') as f:
         f.write(ans)
     
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
