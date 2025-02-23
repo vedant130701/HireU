@@ -41,7 +41,6 @@ def contact_llama(user_messages, model_version="llama3.1:8b"):
     responseMessage = response['message']['content']
     print("Chatbot: ", responseMessage)
     ques_index = find_match(questions, responseMessage)
-    print("Question match: ", )
     user_messages.append({"role": "assistant", "content": responseMessage, "index": ques_index})
     return user_messages
 
@@ -87,7 +86,6 @@ def main():
     Limit it to maximum 2 follow up questions per main question. Do not give your review about their answer. JUST GATHER INFORMATION.
     Do not move to the next question until the follow-up questions are answered.
     Do not ask follow up for questions 11 to 19. If a question can be answered by yes or no, move to the next main question after getting the response.
-    For each main question, write the question number in the format "Question <Question Number>": <Your question>.
     Be professional in your chat.
     '''
     
@@ -109,7 +107,6 @@ def main():
             break
         user_json = {"role": "user", "content": user_input}
         user_messages.append(user_json) 
-        # print(user_messages)
         user_messages = contact_llm(user_messages)
 
 
