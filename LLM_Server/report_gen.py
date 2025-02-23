@@ -25,18 +25,19 @@ def get_grants_info():
 
 def process_conversation(json_data):
     # Load the JSON data from the file
-    
 
-    final_result = ''
-    # Process each turn in the conversation
+    final_result = ""
+
     for i, message in enumerate(json_data):
-        if message['role'] == 'assistant':
-            final_result += f'Q: {message["content"].replace("\n", "").replace("\t", "")} '
-        elif message['role'] == 'user':
-            final_result += f'A: {message["content"].replace("\n", "").replace("\t", "")}\n'
-            
+        content = message["content"].replace("\n", "").replace("\t", "")  # Pre-process content
 
-    return final_result
+        if message["role"] == "assistant":
+            final_result += "Q: " + content + " "
+        elif message["role"] == "user":
+            final_result += "A: " + content + "\n"
+
+    print(final_result)
+
 
 async def contact_llama(user_messages, model_version="llama3.1:8b"):
     response: ChatResponse =  await AsyncClient().chat(model_version, messages=user_messages, stream=False)
