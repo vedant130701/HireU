@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from dbcon.database import candidate_questions, employer_role_registration_answers
+from LLM_Server.llm_server import contact_llm
 
 candidate_answers_router = APIRouter()
 
@@ -18,7 +19,9 @@ async def initiate_conversation(candidate_id: str, employer_id: str):
                 "content": "Hello"
             }
         ]
-        return {"formatted_text": formatted_text}
+        response = await contact_llm(prompt_for_llm)
+        response[-1]["index"] = 0
+        return response
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

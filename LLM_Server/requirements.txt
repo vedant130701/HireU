@@ -1,3 +1,8 @@
 ollama
 fuzzywuzzy
 python-Levenshtein
+asyncio
+pandas
+openpyxl
+python-dotenv
+openai
