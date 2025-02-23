@@ -5,11 +5,19 @@ candidate_answers_router = APIRouter()
 
 
 @candidate_answers_router.post("/{employer_id}/{candidate_id}")
-async def get_formatted_questions_answers(candidate_id: str, employer_id: str):
+async def initiate_conversation(candidate_id: str, employer_id: str):
     try:
-        # Fetch employer's questions and generate formatted text
         formatted_text = await generate_prompt(candidate_id, employer_id)
-
+        prompt_for_llm = [
+            {
+                "role": "system",
+                "content": formatted_text
+            },
+            {
+                "role": "user",
+                "content": "Hello"
+            }
+        ]
         return {"formatted_text": formatted_text}
 
     except Exception as e:
@@ -31,11 +39,11 @@ async def generate_prompt(candidate_id, employer_id):
         raise HTTPException(status_code=500, detail="Invalid format: 'answers' should be a list of dictionaries.")
 
     # Organize answers by question_id, ensuring answer_text is treated as a list
-    answers_dict = {
-        str(answer.get("question_id", "")): answer["answer_text"]
-        if isinstance(answer["answer_text"], list) else [answer["answer_text"]]
-        for answer in answers_list if isinstance(answer, dict)  # Ensure each item is a dictionary
-    }
+    # answers_dict = {
+    #     str(answer.get("question_id", "")): answer["answer_text"]
+    #     if isinstance(answer["answer_text"], list) else [answer["answer_text"]]
+    #     for answer in answers_list if isinstance(answer, dict)  # Ensure each item is a dictionary
+    # }
 
     # Define indices where answers should be appended
     indices_with_answers = {1, 2, 3, 5, 6, 7, 8, 9}
@@ -46,23 +54,20 @@ async def generate_prompt(candidate_id, employer_id):
         "The following are the questions you will ask the candidate:\n\n"
         "Candidate Questions:\n\n"
     )
-
-    for idx, question in enumerate(candidate_questions_final.get("questions", []), start=1):
-        question_id = str(question.get("_id", ""))
-        question_text = f"{idx}. {question['question_text']}\n"
+    index = 0
+    for idx, question in enumerate(candidate_questions_final.get("questions", []), start=0):
 
         # Append answer only if index is in the predefined set
         if idx in indices_with_answers:
-            answer_text = answers_dict.get(question_id, [])
-
-            # Ensure answer_text is always a list and join properly
-            formatted_answer = ", ".join(answer_text) if isinstance(answer_text, list) else str(answer_text)
-            formatted_text += f"{question_text}{formatted_answer}\n\n"
+            temp_txt = f"{idx + 1}. {question} "
+            temp_txt += "(" + answers_list[idx] + ")\n\n"
+            index += 1
+            formatted_text += temp_txt
         else:
-            formatted_text += f"{question_text}\n"
+            formatted_text += f"{idx + 1}. {question}\n"
 
     follow_up_instructions = (
-        "Please ask the main questions as is and detail in () is not part of the question. Please use the questions in the same format. Only use the details\n"
+        "\n Please ask the main questions as is and detail in () is not part of the question. Please use the questions in the same format. Only use the details\n"
         "in () to ask follow-up questions. DO NOT MENTION EMPLOYER ANSWER IN ANY FORM IN YOUR QUESTIONS.\n\n"
         "Limit it to a maximum of 2 follow-up questions per main question. Do not give your review about their answer. JUST GATHER INFORMATION.\n"
         "Do not move to the next question until the follow-up questions are answered.\n"
@@ -72,6 +77,3 @@ async def generate_prompt(candidate_id, employer_id):
     formatted_text += follow_up_instructions
 
     return formatted_text
-
-
-
