@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from dbcon.database import candidate_answers, employer_role_registration_questions, employer_role_registration_answers
+from dbcon.database import candidate_answers, employer_role_registration_questions, employer_role_registration_answers, candidate_info
 from model.models import ReportGen
 from pymongo.errors import DuplicateKeyError
 import json
@@ -64,6 +64,9 @@ async def generate_report(body: ReportGen):
         # tasks[f"report_generation_1"] = 1
 
         final_response = await make_report(employerQA, answers_list)
+        get_candidate_name = await candidate_info.find_one({"candidate_id": body.candidate_id})
+        final_response.append({"Name": get_candidate_name.get("name")})
+        final_response.append({"Position": body.role_id})
 
         # return {"res": f"Report generation started, task ID: {id(task)}", "id": id(task)}
         # return {"res": f"Report generation started, task ID:", "json_answer_list": answers_list, "employerQA": employerQA}
