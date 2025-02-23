@@ -3,6 +3,7 @@ from ollama import ChatResponse
 import json
 import asyncio
 from ollama import AsyncClient
+import pandas as pd
 
 Employer_questions = '''
 Q:What salary range are you offering for this role? A:100-120k
@@ -17,6 +18,10 @@ Q:What kind of insurance coverage does the employer provide for this role? A:Yes
 Q:Do you offer commuter benefits or travel reimbursement for work? A:yes mbta unlimited pass provided
 Q:Are there any special requirements for this role (e.g., certifications, security clearances, physical requirements)? A:None'''
 
+
+def get_grants_info():
+    grants = pd.read_excel('candidate_chatbot_questions.xlsx', engine='openpyxl')
+    return grants
 
 def process_conversation(file_name):
     # Load the JSON data from the file
@@ -69,7 +74,8 @@ async def make_report(employer_questions, user_conversation):
     }
 
     messages = [System_role]
-    userMsg = {"role": "user", "content": "Generate a report"}
+    getGrants = get_grants_info().to_string()
+    userMsg = {"role": "user", "content": "Here is information about the grants: " + getGrants + "Use it to generate a report."}
     messages.append(userMsg)
     result = await contact_llama(messages)
     return result
@@ -79,7 +85,7 @@ async def main():
     # Call the function with the input file name
     candidate_chat_hist = process_conversation('chatHistory.json')
     ans = await make_report(Employer_questions, candidate_chat_hist)
-    with open('response_message.txt', 'w') as f:
+    with open('grant_response_message.txt', 'w') as f:
         f.write(ans)
     
 

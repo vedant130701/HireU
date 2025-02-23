@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 hireu-env/
 response_message.txt
+.env
