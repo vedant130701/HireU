@@ -2,6 +2,7 @@ import { Alert } from '@mui/material';
 import Chat from 'components/Chat/Chat';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import sendEmail from 'utils/emailSender';
 
 const jobOfferQuestions = [
   "What's the name of the candidate?",
@@ -22,9 +23,17 @@ const jobOfferQuestions = [
 const Offer = () => {
   const navigate = useNavigate();
   const [alertMessage, setAlertMessage] = useState('');
+  const [answersList, setAnswersList] = useState([]);
   const handleQuestionnaireSubmit = () => {
     setAlertMessage(
       'Thank you for answering all the questions! We will review your responses and be in touch soon to let you know about next steps.'
+    );
+    const email = localStorage.getItem('email');
+    sendEmail(
+      email,
+      'Job Offer Questionnaire',
+      `Thank you for answering all the questions! We will review your responses and be in touch soon to let you know about the next steps.
+    Fill out the candidate questionnaire using this link: http://localhost:3000/candidate?email=${email}`
     );
     setTimeout(() => {
       navigate('/home');
@@ -33,7 +42,7 @@ const Offer = () => {
   return (
     <div style={{ height: 'calc(100vh - 99px)' }}>
       {alertMessage.length > 0 && <Alert severity="success">{alertMessage}</Alert>}
-      <Chat questionsList={jobOfferQuestions} handleQuestionnaireSubmit={handleQuestionnaireSubmit} />
+      <Chat questionsList={jobOfferQuestions} handleQuestionnaireSubmit={handleQuestionnaireSubmit} setAnswersList={setAnswersList} />
     </div>
   );
 };
