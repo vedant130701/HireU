@@ -2,6 +2,8 @@ from ollama import chat
 from ollama import ChatResponse
 import json
 from fuzzywuzzy import fuzz, process
+import asyncio
+from ollama import AsyncClient
 
 questions = [
     "1. What is your expected salary range?",  
@@ -36,23 +38,23 @@ def find_match(question_list, response):
     else:
         return -1
 
-def contact_llama(user_messages, model_version="llama3.1:8b"):
-    response: ChatResponse = chat(model_version, messages=user_messages, stream=False)
+async def contact_llama(user_messages, model_version="llama3.1:8b"):
+    response: ChatResponse = await AsyncClient().chat(model_version, messages=user_messages, stream=False)
     responseMessage = response['message']['content']
     print("Chatbot: ", responseMessage)
     ques_index = find_match(questions, responseMessage)
     user_messages.append({"role": "assistant", "content": responseMessage, "index": ques_index})
     return user_messages
 
-def contact_llm(user_messages, llm_api_model_type='ollama', model_version="llama3.1:8b"):
+async def contact_llm(user_messages, llm_api_model_type='ollama', model_version="llama3.1:8b"):
     if(llm_api_model_type == 'ollama'):
-        return contact_llama(user_messages, model_version)
+        return await contact_llama(user_messages, model_version)
     else:
         pass
 
 
 
-def main():
+async def main():
     system_role ={
     "role": "system",
     "content": '''You are a last round recruiter called HireU. You will be interacting with a candidate for the following list of questions: 
@@ -107,8 +109,8 @@ def main():
             break
         user_json = {"role": "user", "content": user_input}
         user_messages.append(user_json) 
-        user_messages = contact_llm(user_messages)
+        user_messages = await contact_llm(user_messages)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

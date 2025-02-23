@@ -1,3 +1,4 @@
 ollama
 fuzzywuzzy
 python-Levenshtein
+asyncio

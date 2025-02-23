@@ -1,6 +1,8 @@
 from ollama import chat
 from ollama import ChatResponse
 import json
+import asyncio
+from ollama import AsyncClient
 
 Employer_questions = '''
 Q:What salary range are you offering for this role? A:100-120k
@@ -32,12 +34,12 @@ def process_conversation(file_name):
 
     return final_result
 
-def contact_llama(user_messages, model_version="llama3.1:8b"):
-    response: ChatResponse = chat(model_version, messages=user_messages, stream=False)
+async def contact_llama(user_messages, model_version="llama3.1:8b"):
+    response: ChatResponse =  await AsyncClient().chat(model_version, messages=user_messages, stream=False)
     responseMessage = response['message']['content']
     return responseMessage
 
-def make_report(employer_questions, user_conversation):
+async def make_report(employer_questions, user_conversation):
     System_role = {
         "role": "system",
         "content":
@@ -69,18 +71,18 @@ def make_report(employer_questions, user_conversation):
     messages = [System_role]
     userMsg = {"role": "user", "content": "Generate a report"}
     messages.append(userMsg)
-    result = contact_llama(messages)
+    result = await contact_llama(messages)
     return result
     
 
-def main():
+async def main():
     # Call the function with the input file name
     candidate_chat_hist = process_conversation('chatHistory.json')
-    ans = make_report(Employer_questions, candidate_chat_hist)
+    ans = await make_report(Employer_questions, candidate_chat_hist)
     with open('response_message.txt', 'w') as f:
         f.write(ans)
     
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
