@@ -11,3 +11,4 @@ employer_role_registration_questions = db.employer_role_registration_questions
 employer_role_registration_answers = db.employer_role_registration_answers
 candidate_questions = db.candidate_questions
 candidate_answers = db.candidate_answers
+candidate_info = db.candidate_info
