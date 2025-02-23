@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional, Any
 
 
 class EmployerRegistration(BaseModel):
@@ -30,13 +30,18 @@ class EmployerRoleRegistrationAnswers(BaseModel):
     role_id: str
 
 
-class QuestionAnswer(BaseModel):
-    role: str
-    content: str
-    index: int
+# class QuestionAnswer(BaseModel):
+#     role: str
+#     content: str
+#     index: int
 
 class CandidateAnswers(BaseModel):
     candidate_id: str
     employer_id: str
     role_id: str
-    answers: List[QuestionAnswer]
+    answers: List[Any]
+
+class ReportGen(BaseModel):
+    employer_id: str
+    role_id: str
+    candidate_id: str
